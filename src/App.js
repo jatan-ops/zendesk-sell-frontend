@@ -6,7 +6,7 @@ function App() {
 
   const clientId = useRef()
   const clientSecret = useRef()
-  const subDomain = useRef()
+  const personalAccessToken = useRef()
 
   function getAuthCode() {
     localStorage.setItem('client_secret',clientSecret.current.value)
@@ -15,18 +15,28 @@ function App() {
     const redirectUri = 'https%3A%2F%2Flocalhost%3A3000%2Foauth2%2Fcallback'
     //https%3A%2F%2Fzendesk-api.vercel.app%2Foauth2%2Fcallback
 
-    window.location.replace(`https://${subDomain.current.value}.zendesk.com/oauth/authorizations/new?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId.current.value}&scope=read%20write`)
+    window.location.replace(`https://api.getbase.com/oauth2/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId.current.value}`)
   }
 
-  function getTicketList() {
+  function getContactsList() {
 
     let token = null
     if(localStorage.getItem('token') !== null) {
       token = localStorage.getItem('token')    
     }
 
-    axios.post('https://localhost:5000/listTickets',{data:{
+    axios.post('https://localhost:5000/getContacts',{data:{
       token: token,
+    }})
+    .then(res => {
+      console.log('data: ', res.data)
+    })
+  }
+
+  function getContactsListPAT() {
+
+    axios.post('https://localhost:5000/getContactsPAT',{data:{
+      token: personalAccessToken.current.value,
     }})
     .then(res => {
       console.log('data: ', res.data)
@@ -45,7 +55,6 @@ function App() {
       client_secret = localStorage.getItem('client_secret')
       client_id = localStorage.getItem('client_id')
     }
-    
 
     if (params.has("code")) {
       axios.post(`https://localhost:5000/getToken?code=${code}`,{
@@ -55,7 +64,7 @@ function App() {
         }
       })
       .then(res => {
-        console.log('token: ', res.data.access_token)
+        console.log('token: ', res.data)
         localStorage.setItem('token',res.data.access_token)
       })
     }
@@ -65,16 +74,24 @@ function App() {
     <div>
       <input type='text' ref={clientId} placeholder='Enter client id' />
       <input type='text' ref={clientSecret} placeholder='Enter client secret' />
-      <input type='text' ref={subDomain}  placeholder='subdomain'/>
       <button
         onClick={getAuthCode}
       >
         Get Auth code
       </button>
       <button
-        onClick={getTicketList}
+        onClick={getContactsList}
       >
-        Get ticket list
+        Get contacts list
+      </button>
+      <br />
+      <hr />
+      <br />
+      <input type='text' ref={personalAccessToken}  placeholder='personalAccessToken'/>
+      <button
+        onClick={getContactsListPAT}
+      >
+        Get contacts list with PAT
       </button>
     </div>
   );
